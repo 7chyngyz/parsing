@@ -1,22 +1,39 @@
 <div class="main">
-    <input class="ipt" type="file" (change)="onFileChange($event)" />
-    <div class="btns">
-        <button (click)="startParsing()">Start Parse</button>
-        <button *ngIf="csvData.length > 0" (click)="downloadSelectedTable()">Download Selected Table as Word</button>
-    </div> 
-    <table *ngIf="csvData.length > 0">
-      <thead>
-        <tr>
-          <th *ngFor="let header of getObjectKeys(csvData[0])">{{ header }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let row of csvData; let i = index" (click)="selectRow(i)" class="table-row">
-          <td *ngFor="let key of getObjectKeys(row)">
-            {{ row[key] }}
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <input class="ipt" type="file" (change)="onFileChange($event)" />
+  <div class="btns">
+    <button (click)="startParsing()">Старт парсинг</button>
+    <button *ngIf="csvData.length > 0" (click)="downloadAllTable()">Скачать все данные в Word</button>
+    <button *ngIf="csvData.length > 0" (click)="downloadSelectedTable()">Скачать только выбранные данные</button>
   </div>
   
+  <table *ngIf="csvData.length > 0">
+    <thead>
+      <tr>
+        <th>
+          <input 
+            type="checkbox" 
+            (change)="toggleAllSelection($event)" 
+            [checked]="selectedRows.length === csvData.length" 
+          />
+        </th>
+        <th *ngFor="let header of getObjectKeys(csvData[0])">{{ header }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let row of csvData" 
+          (click)="toggleSelection(row)" 
+          [class.selected]="selectedRows.includes(row)">
+        <td>
+          <input 
+            type="checkbox" 
+            [checked]="selectedRows.includes(row)" 
+            (change)="toggleSelection(row)" 
+          />
+        </td>
+        <td *ngFor="let key of getObjectKeys(row)">
+          {{ row[key] }}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
