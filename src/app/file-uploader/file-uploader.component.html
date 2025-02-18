@@ -2,8 +2,7 @@
   <input class="ipt" type="file" (change)="onFileChange($event)" />
   <div class="btns">
     <button (click)="startParsing()">Старт парсинг</button>
-    <button *ngIf="csvData.length > 0" (click)="downloadAllTable()">Скачать все данные в Word</button>
-    <button *ngIf="csvData.length > 0" (click)="downloadSelectedTable()">Скачать только выбранные данные</button>
+    <button *ngIf="csvData.length > 0" (click)="downloadSelectedAsZip()">Скачать выбранные данные (ZIP)</button>
   </div>
   
   <table *ngIf="csvData.length > 0">

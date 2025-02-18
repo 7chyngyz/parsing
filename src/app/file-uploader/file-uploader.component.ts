@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import * as Papa from 'papaparse';
+import JSZip from 'jszip';
 
 @Component({
   selector: 'app-csv-upload',
@@ -46,74 +47,47 @@ export class CsvUploadComponent {
     return Object.keys(obj);
   }
 
-  downloadAllTable() {
-    if (this.csvData.length === 0) {
-      alert('No data available to download');
-      return;
-    }
-  
-    const headers = this.getObjectKeys(this.csvData[0]);
+  generateWordContent(data: any): string {
+    const headers = this.getObjectKeys(data);
     let content = `<html><body>`;
-  
-    this.csvData.forEach(row => {
-      const name = row['OwnerName'] || 'Неизвестный';
-      const email = row['Username'] || 'Не указан';
-  
-      content += `<p>Здравствуйте - <b>${name}</b>,</p>`;
-      content += `<p>Его email: <b>${email}</b></p>`;
-      content += `<p><b>Остальные данные:</b></p><ul>`;
-  
-      headers.forEach(header => {
-        if (header !== 'OwnerName' && header !== 'Username') {
-          content += `<li><b>${header}:</b> ${row[header]}</li>`;
-        }
-      });
-      content += `</ul><hr/>`; 
+
+    const name = data['OwnerName'] || 'Неизвестный';
+    const email = data['Username'] || 'Не указан';
+
+    content += `<p>Здравствуйте - <b>${name}</b>,</p>`;
+    content += `<p>Его email: <b>${email}</b></p>`;
+    content += `<p><b>Остальные данные:</b></p><ul>`;
+
+    headers.forEach(header => {
+      if (header !== 'OwnerName' && header !== 'Username') {
+        content += `<li><b>${header}:</b> ${data[header]}</li>`;
+      }
     });
-  
-    content += `</body></html>`;
-  
-    const blob = new Blob(["\ufeff" + content], { type: 'application/msword;charset=utf-8' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'all-users.doc'; 
-    link.click();
-  }  
-  
-  downloadSelectedTable() {
+
+    content += `</ul><hr/></body></html>`;
+    return content;
+  }
+
+  downloadSelectedAsZip() {
     if (this.selectedRows.length === 0) {
       alert('Please select at least one row to download');
       return;
     }
-  
-    const headers = this.getObjectKeys(this.selectedRows[0]);
-    let content = `<html><body>`;
-  
-    this.selectedRows.forEach(row => {
-      const name = row['OwnerName'] || 'Неизвестный';
-      const email = row['Username'] || 'Не указан';
-  
-      content += `<p>Здравствуйте - <b>${name}</b>,</p>`;
-      content += `<p>Его email: <b>${email}</b></p>`;
-      content += `<p><b>Остальные данные:</b></p><ul>`;
-  
-      headers.forEach(header => {
-        if (header !== 'OwnerName' && header !== 'Username') {
-          content += `<li><b>${header}:</b> ${row[header]}</li>`;
-        }
-      });
-      content += `</ul><hr/>`; 
+
+    const zip = new JSZip();
+    
+    this.selectedRows.forEach((row, index) => {
+      const content = this.generateWordContent(row);
+      zip.file(`user_${index + 1}.doc`, "\ufeff" + content, { binary: false });
     });
-  
-    content += `</body></html>`;
-  
-    const blob = new Blob(["\ufeff" + content], { type: 'application/msword;charset=utf-8' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'selected-users.doc';
-    link.click();
+
+    zip.generateAsync({ type: 'blob' }).then((content: Blob) => {
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(content);
+      link.download = 'selected-users.zip';
+      link.click();
+    });
   }
-  
 
   toggleSelection(row: any) {
     const index = this.selectedRows.indexOf(row);
